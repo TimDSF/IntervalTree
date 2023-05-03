@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>JSXGraph template</title>
+    <title>Interval Tree</title>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
     <link href="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraph.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/jsxgraph/distrib/jsxgraphcore.js" type="text/javascript" charset="UTF-8"></script>
@@ -27,7 +27,7 @@
 
     <div style="float: flex;">
       <div id="intervals" class="jxgbox" style="width:500px; height:500px; float: left;"></div>
-      <div id="tree" class="jxgbox" style="width:500px; height:500px; float: left;"></div>
+      <div id="tree" class="jxgbox" style="width:750px; height:500px; float: left;"></div>
     </div>
 
     <script>
@@ -60,7 +60,6 @@
       const T1x = -5, T1y = 5, T2x = 5, T2y = -5;  // the boundary points for the tree visualizer
       var Iboard = JXG.JSXGraph.initBoard('intervals', {boundingbox: [I1x, I1y, I2x, I2y]});  // initialize the interval visualizer
       var Tboard = JXG.JSXGraph.initBoard('tree', {boundingbox: [T1x - 1, T1y + 1, T2x + 1, T2y - 1]});  // initialize the tree visualizer
-      var mLine = null;  // the median line for each node
 
       const addBtn = document.getElementById('addBtn');      // add button
       const buildBtn = document.getElementById('buildBtn');  // build button
@@ -134,10 +133,6 @@
       function build(data) {
         idx = data[0]; intervals = data[1]; depth = data[2]; l = data[3]; r = data[4]; m = (l + r) / 2
         
-        // remove the current median line if exists
-        if (mLine != null) {
-          Iboard.removeObject(mLine);
-        }
         // empty tree node
         if (intervals.length == 0) {
           Tboard.create('point', [m, T1y - 0.5 - depth], {size: 10, name: '('+idx+') null', fillColor: 'grey', strokeColor: 'grey'}).setAttribute({fixed:true});
@@ -152,7 +147,8 @@
         nodes[idx] = new Node(median, depth, l, r);
 
         // create the median line
-        mLine = Iboard.create('line', [[median, I1y], [median, I2y]]).setAttribute({fixed:true});
+        var mLine = Iboard.create('line', [[median, I1y], [median, I2y]]).setAttribute({fixed:true});
+        Iboard.create('text', [median + 0.25, I1y - 0.5, '('+idx+')']).setAttribute({fixed:true});
 
         // categorize the given intervals
         for (var i = 0; i < intervals.length; ++ i) {
@@ -182,8 +178,8 @@
         for (var i = 0; i < nodes[idx].dr.length; ++ i) {
           DR = DR + ' (' + nodes[idx].dr[i].l + ',' + nodes[idx].dr[i].r + ')'
         }
-        Tboard.create('text', [m + 0.25, T1y - 0.5 - depth, AL]).setAttribute({fixed:true}).setAttribute({fixed:true});
-        Tboard.create('text', [m - 0.25, T1y - 0.5 - depth, DR], {anchorX:'right'}).setAttribute({fixed:true}).setAttribute({fixed:true});
+        Tboard.create('text', [m + 0.25, T1y - 0.5 - depth, AL]).setAttribute({fixed:true});
+        Tboard.create('text', [m - 0.25, T1y - 0.5 - depth, DR], {anchorX:'right'}).setAttribute({fixed:true});
 
         // add the 'recursive' call inputs to the queue for the future steps
         queue.push([idx * 2, lefts, depth + 1, l, m])
