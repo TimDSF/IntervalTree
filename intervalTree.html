@@ -192,7 +192,7 @@
       // clear function: clear all the inputs
       function clear() {
         Iboard = JXG.JSXGraph.initBoard('intervals', {boundingbox: [I1x, I1y, I2x, I2y]});
-        Tboard = JXG.JSXGraph.initBoard('nodes', {boundingbox: [T1x - 1, T1y + 1, T2x + 1, T2y - 1]});
+        Tboard = JXG.JSXGraph.initBoard('tree', {boundingbox: [T1x - 1, T1y + 1, T2x + 1, T2y - 1]});
         mLine = null
         
         addBtn.disabled = false
@@ -211,10 +211,8 @@
       // random function: clear all the inputs and randomly generates a new set of inputs
       function random() {
         clear();
-        console.log(intervals);
 
         m = rand(15) + 5;
-        console.log(n);
         for (var i = 0; i < m; ++ i) {
           var l = rand(18) - 9, r = rand(9 - l) + l;
           addInterval(l, r)
