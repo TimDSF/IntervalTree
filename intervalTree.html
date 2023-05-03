@@ -12,7 +12,7 @@
   <body>
     <h1>Interval Tree</h1> 
     <h3>    by Tim Dong, 05/03/2023</h3>
-    <label> New Interval: (</label><input value='-1' type="number" id="left" name="left" style="width:50px"><label>,</label><input value='1' type="number" id="right" name="right" style="width:50px"><label>) inside (-10,10)<br>
+    <label> New Interval: (</label><input value='-1' type="number" id="left" name="left" style="width:50px"><label>,</label><input value='1' type="number" id="right" name="right" style="width:50px"><label>)<br>
     
     <div">
       <button id="addBtn">Add</button>
@@ -31,7 +31,6 @@
     </div>
 
     <script>
-
       // class for storing a interval
       class Interval {
         constructor(l, r) {
@@ -56,8 +55,8 @@
       // reference: https://jsxgraph.uni-bayreuth.de/docs/index.html
       // reference: https://jsxgraph.uni-bayreuth.de/wiki/index.php?title=Main_Page
 
-      const I1x = -10, I1y = 20, I2x = 10, I2y = -1;  // the boundary points for the interval visualizer
-      const T1x = -5, T1y = 5, T2x = 5, T2y = -5;  // the boundary points for the tree visualizer
+      var I1x = -10, I1y = 20, I2x = 10, I2y = -1;  // the boundary points for the interval visualizer
+      var T1x = -5, T1y = 5, T2x = 5, T2y = -5;  // the boundary points for the tree visualizer
       var Iboard = JXG.JSXGraph.initBoard('intervals', {boundingbox: [I1x, I1y, I2x, I2y]});  // initialize the interval visualizer
       var Tboard = JXG.JSXGraph.initBoard('tree', {boundingbox: [T1x - 1, T1y + 1, T2x + 1, T2y - 1]});  // initialize the tree visualizer
 
@@ -88,9 +87,16 @@
         var s = Iboard.create('segment', [p, q], {strokeWidth: 2, strokeColor: 'black'}).setAttribute({fixed:true});
 
         n += 1;
-        if (n > I1y) {
-          Iboard.setBoundingBox([I1x, n + 1, I2x, I2y]);
+        if (l <= I1x) {
+          I1x = Math.floor(l) - 1;
         }
+        if (I2x <= r) {
+          I2x = Math.floor(r) + 1;
+        }
+        if (n > I1y) {
+          I1y = n + 1;
+        }
+        Iboard.setBoundingBox([I1x, I1y, I2x, I2y]);
       }
       // onclick function for the add button: add a new interval
       function addIntervalClick() {
@@ -113,18 +119,51 @@
         if (queue.length == 0) return;
         build(queue.shift());
       }
+      // helper function for finding the mth (0-indexed) element of a list
+      // reference: https://brilliant.org/wiki/median-finding-algorithm/
+      function quickSelect(arr, m) {
+        if (arr.length == 1) return arr[0];
+        var medians = [];
+        for (var i = 0; i < arr.length; i += 5) {
+          var tmp = [];
+          for (var j = i; j < arr.length && j < i + 5; ++ j) {
+            tmp.push(arr[j]);
+          }
+          tmp.sort();
+          medians.push(tmp[Math.floor((tmp.length - 1) / 2)]);
+        }
+        var pivot = findMedian(medians);
+        var lo = [], hi = [], mi = 0;
+        for (var i = 0; i < arr.length; ++ i) {
+          if (arr[i] < pivot) {
+            lo.push(arr[i]);
+          } else if (arr[i] > pivot) {
+            hi.push(arr[i]);
+          } else {
+            ++ mi;
+          }
+        }
+        if (m < lo.length) {
+          return quickSelect(lo, m);
+        } else if (m < lo.length + mi) {
+          return pivot;
+        } else {
+          return quickSelect(hi, m - lo.length - mi);
+        }
+      }
+      // helper function that finds the median of an array: O(n)
+      function findMedian(arr) {
+        if (arr.length == 1) return arr[0];
+        return quickSelect(arr, Math.floor((arr.length - 1) / 2))
+      }
       // helper function that finds the median end point of the interval
-      // note that: current implementation is O(n log n). A better version should be using the median-of-medians algorithm
-      //            that have a deterministic O(n) time complexity. However, for the purpose of the demo, a simpler O(n log n)
-      //            version is also acceptable
-      function findMedian(intervals) {
+      function findIntervalMedian(intervals) {
         var arr = [];
         for (var i = 0; i < intervals.length; ++ i) {
           arr.push(intervals[i].l);
           arr.push(intervals[i].r);
         }
-        arr.sort((a, b) => a - b)
-        return arr[Math.floor(arr.length/2)]
+        return findMedian(arr);
       }
       // build function: It will find the median among all the given intervals, split into lefts, rights, and mids. Sort the
       //                 by the left boundary (ascending) and by the right boundary (descending) and stored at each node. Then,
@@ -143,7 +182,7 @@
         }
 
         // none empty tree node
-        var lefts = [], rights = [], median = findMedian(intervals)
+        var lefts = [], rights = [], median = findIntervalMedian(intervals)
         nodes[idx] = new Node(median, depth, l, r);
 
         // create the median line
@@ -187,6 +226,9 @@
       }
       // clear function: clear all the inputs
       function clear() {
+        const I1x = -10, I1y = 20, I2x = 10, I2y = -1;  // the boundary points for the interval visualizer
+        const T1x = -5, T1y = 5, T2x = 5, T2y = -5;  // the boundary points for the tree visualizer
+
         Iboard = JXG.JSXGraph.initBoard('intervals', {boundingbox: [I1x, I1y, I2x, I2y]});
         Tboard = JXG.JSXGraph.initBoard('tree', {boundingbox: [T1x - 1, T1y + 1, T2x + 1, T2y - 1]});
         mLine = null
@@ -208,10 +250,10 @@
       function random() {
         clear();
 
-        m = rand(15) + 5;
-        for (var i = 0; i < m; ++ i) {
-          var l = rand(18) - 9, r = rand(9 - l) + l;
-          addInterval(l, r)
+        var t = rand(10) + 15;
+        for (var i = 0; i < t; ++ i) {
+          var m = rand(41) - 20, d = (rand(4) != 0) ? (rand(3) + 1) : (rand(10) + 5);
+          addInterval(m - d, m + d)
         }
       }
 
